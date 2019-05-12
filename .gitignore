@@ -1,0 +1,9 @@
+*.tar
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.pth
+/src/datasets/*
+/data/*.pkl
