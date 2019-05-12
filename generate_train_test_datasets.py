@@ -46,7 +46,7 @@ def word_word_edges(p_ij):
     cols = list(p_ij.columns); cols = [str(w) for w in cols]
     for w1 in cols:
         for w2 in cols:
-            if counter % 5000:
+            if (counter % 300000) == 0:
                 print("Current Count: %d; %s %s" % (counter, w1, w2))
             if (w1 != w2) and ((w1,w2) not in dum) and (p_ij.loc[w1,w2] > 0):
                 word_word.append((w1,w2,{"weight":p_ij.loc[w1,w2]})); dum.append((w2,w1))
