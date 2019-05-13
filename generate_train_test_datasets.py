@@ -134,6 +134,7 @@ if __name__=="__main__":
     #p.close()
     print("Building word-word edges")
     word_word = word_word_edges(p_ij)
+    save_as_pickle("word_word_edges.pkl", word_word)
     G.add_edges_from(document_word)
     G.add_edges_from(word_word)
     save_as_pickle("text_graph.pkl", G)

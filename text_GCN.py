@@ -75,13 +75,12 @@ test_idxs = []
 for b_id in df_data["b"].unique():
     dum = df_data[df_data["b"] == b_id]
     if len(dum) >= 4:
-        test_idxs.append(list(np.random.choice(dum.index, size=round(0.2*len(dum)), replace=False)))
+        test_idxs.extend(list(np.random.choice(dum.index, size=round(0.2*len(dum)), replace=False)))
         
 # select only certain labelled nodes for semi-supervised GCN
-ref = [node for node in G.nodes]
 selected = []
-for i in range(len(G.nodes)):
-    if ref[i] not in test_idxs:
+for i in range(len(df_data)):
+    if i not in test_idxs:
         selected.append(i)
 
 f_selected = f[selected]; f_selected = torch.from_numpy(f_selected).float()
@@ -96,10 +95,10 @@ optimizer = optim.Adam(net.parameters(), lr=0.0007)
 
 net.train()
 losses_per_epoch = []; evaluation_trained = []; evaluation_untrained = []
-for e in range(70000):
+for e in range(5000):
     optimizer.zero_grad()
     output = net(f, selected)
-    loss = criterion(output, torch.tensor(labels_selected).long())
+    loss = criterion(output, torch.tensor(labels_selected).long() -1)
     losses_per_epoch.append(loss.item())
     loss.backward()
     optimizer.step()
@@ -109,8 +108,8 @@ for e in range(70000):
         pred_labels = net(f, test_idxs)
         trained_accuracy = evaluate(output, labels_selected); untrained_accuracy = evaluate(pred_labels, labels_not_selected)
         evaluation_trained.append((e, trained_accuracy)); evaluation_untrained.append((e, untrained_accuracy))
-        #print("Evaluation accuracy of trained, untrained nodes respectively: ", trained_accuracy,\
-        #      untrained_accuracy)
+        print("Evaluation accuracy of trained, untrained nodes respectively: ", trained_accuracy,\
+              untrained_accuracy)
         net.train()
 evaluation_trained = np.array(evaluation_trained); evaluation_untrained = np.array(evaluation_untrained) 
 
