@@ -81,7 +81,7 @@ for d in G.degree(weight=None):
 degrees = np.diag(degrees)
 X = np.eye(G.number_of_nodes()) # Features are just identity matrix
 A_hat = degrees@A@degrees
-f = A_hat@X # (n X n) X (n X n) x (n X n) X (n X n) input of net
+f = X # (n X n) X (n X n) x (n X n) X (n X n) input of net
 
 ### stratified test samples
 test_idxs = []
@@ -130,15 +130,15 @@ for e in range(start_epoch,end_epoch):
               untrained_accuracy)
         print(output[selected].max(1)[1])
         net.train()
-    if trained_accuracy > best_pred:
-        best_pred = trained_accuracy
-        torch.save({
-                'epoch': e + 1,\
-                'state_dict': net.state_dict(),\
-                'best_acc': trained_accuracy,\
-                'optimizer' : optimizer.state_dict(),\
-            }, os.path.join("./data/" ,"model_best.pth.tar"))
-    if (e % 300) == 0:
+        if trained_accuracy > best_pred:
+            best_pred = trained_accuracy
+            torch.save({
+                    'epoch': e + 1,\
+                    'state_dict': net.state_dict(),\
+                    'best_acc': trained_accuracy,\
+                    'optimizer' : optimizer.state_dict(),\
+                }, os.path.join("./data/" ,"model_best.pth.tar"))
+    if (e % 250) == 0:
         torch.save({
                 'epoch': e + 1,\
                 'state_dict': net.state_dict(),\
