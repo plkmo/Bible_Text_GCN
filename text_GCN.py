@@ -12,7 +12,6 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
-import math
 import pickle
 import os
 
@@ -42,7 +41,7 @@ class gcn(nn.Module):
             self.register_parameter("bias", None)
         self.fc1 = nn.Linear(230,66)
         
-    def forward(self, X):
+    def forward(self, X): ### 2-layer GCN architecture
         X = torch.mm(X, self.weight)
         if self.bias is not None:
             X = (X + self.bias)

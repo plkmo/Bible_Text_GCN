@@ -7,14 +7,12 @@ Created on Thu May  9 10:28:24 2019
 import os
 import pickle
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
 import numpy as np
 import networkx as nx
 from collections import OrderedDict
 import math
-from multiprocessing import Pool
 
 def load_pickle(filename):
     completeName = os.path.join("./data/",\
@@ -128,28 +126,10 @@ if __name__=="__main__":
     ### build edges between document-word pairs
     document_word = [(doc,w,{"weight":df_tfidf.loc[doc,w]}) for doc in df_tfidf.index for w in df_tfidf.columns]
     
-    ### build edges between word-word pairs
-    #p = Pool(6); print("Started pool")
-    #word_word = p.map(pool_word_word_edges, p_ij.columns); print("Finished pool")
-    #p.close()
     print("Building word-word edges")
     word_word = word_word_edges(p_ij)
     save_as_pickle("word_word_edges.pkl", word_word)
     G.add_edges_from(document_word)
     G.add_edges_from(word_word)
     save_as_pickle("text_graph.pkl", G)
-    '''
-    ### remove class_labels (book) whose count <=3 before stratified train-test splitting
-    class_frequency = df_data["b"].value_counts()
-    reserved_labels = list(class_frequency[class_frequency <= 3].index)
-    for idx, label in enumerate(reserved_labels):
-        if idx == 0:
-            miss_bool = df_data["b"] != label
-        else:
-            miss_bool = (df_data["b"] != label) & miss_bool
-    df_data_s = df_data[miss_bool]
-    
-    X_train, X_test, y_train, y_test = train_test_split(df_data_s["c"], df_data_s["b"], test_size=0.2, \
-                                                        random_state=7, stratify=df_data_s["b"])
-    '''
     
