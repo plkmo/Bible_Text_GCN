@@ -120,7 +120,7 @@ for e in range(start_epoch,end_epoch):
     losses_per_epoch.append(loss.item())
     loss.backward()
     optimizer.step()
-    if e % 20 == 0:
+    if e % 50 == 0:
         ### Evaluate other untrained nodes and check accuracy of labelling
         net.eval()
         pred_labels = net(f)
@@ -149,10 +149,11 @@ evaluation_trained = np.array(evaluation_trained); evaluation_untrained = np.arr
 
 fig = plt.figure(figsize=(13,13))
 ax = fig.add_subplot(111)
-ax.scatter([i for i in range(1,len(losses_per_epoch)+1)], losses_per_epoch)
+ax.scatter([i for i in range(start_epoch,end_epoch)], losses_per_epoch)
 ax.set_xlabel("Epoch")
 ax.set_ylabel("Loss")
 ax.set_title("Loss vs Epoch")
+plt.savefig(os.path.join("./data/", "loss_vs_epoch.png"))
 
 fig = plt.figure(figsize=(13,13))
 ax = fig.add_subplot(111)
@@ -160,6 +161,7 @@ ax.scatter(evaluation_trained[:,0], evaluation_trained[:,1])
 ax.set_xlabel("Epoch")
 ax.set_ylabel("Accuracy on trained nodes")
 ax.set_title("Accuracy (trained nodes) vs Epoch")
+plt.savefig(os.path.join("./data/", "trained_accuracy_vs_epoch.png"))
 
 fig = plt.figure(figsize=(13,13))
 ax = fig.add_subplot(111)
@@ -167,3 +169,4 @@ ax.scatter(evaluation_untrained[:,0], evaluation_untrained[:,1])
 ax.set_xlabel("Epoch")
 ax.set_ylabel("Accuracy on untrained nodes")
 ax.set_title("Accuracy (untrained nodes) vs Epoch")
+plt.savefig(os.path.join("./data/", "untrained_accuracy_vs_epoch.png"))
