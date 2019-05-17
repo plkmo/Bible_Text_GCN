@@ -56,3 +56,8 @@ if __name__=="__main__":
     checkpoint = torch.load(os.path.join(base_path,"model_best.pth.tar"))
     net = gcn(X.shape[1], A_hat)
     net.load_state_dict(checkpoint['state_dict'])
+    
+    ### Inference
+    net.eval()
+    pred_labels = net(f)
+    c_m = confusion_matrix(labels_not_selected, pred_labels[test_idxs])
