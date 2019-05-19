@@ -6,3 +6,10 @@ We implement text-GCN here using the Holy Bible as the corpus. The Holy Bible co
 
 The Bible text data used here (BBE version) is obtained courtesy of https://github.com/scrollmapper/bible_databases.
 Implementation follows the paper on Text-based Graph Convolutional Network (https://arxiv.org/abs/1809.05679)
+
+Requirements: Python (3.6+), networkx (2.1), torch (1.0.0), torchvision (0.2.1), standard Python libraries
+
+You will find the following:
+1) generate_train_test_datasets.py - script to compute the edges weights, build and save the graph
+2) text_GCN.py - Construct the GCN and trains the model
+3) evaluate_results.py - evaluate the results and misclassified labels
