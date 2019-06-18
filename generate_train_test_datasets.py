@@ -13,6 +13,7 @@ import numpy as np
 import networkx as nx
 from collections import OrderedDict
 import math
+from tqdm import tqdm
 
 def load_pickle(filename):
     completeName = os.path.join("./data/",\
@@ -42,10 +43,10 @@ def dummy_fun(doc):
 def word_word_edges(p_ij):
     dum = []; word_word = []; counter = 0
     cols = list(p_ij.columns); cols = [str(w) for w in cols]
-    for w1 in cols:
+    for w1 in tqdm(cols, total=len(cols)):
         for w2 in cols:
-            if (counter % 300000) == 0:
-                print("Current Count: %d; %s %s" % (counter, w1, w2))
+            #if (counter % 300000) == 0:
+            #    print("Current Count: %d; %s %s" % (counter, w1, w2))
             if (w1 != w2) and ((w1,w2) not in dum) and (p_ij.loc[w1,w2] > 0):
                 word_word.append((w1,w2,{"weight":p_ij.loc[w1,w2]})); dum.append((w2,w1))
             counter += 1
@@ -59,6 +60,7 @@ def pool_word_word_edges(w1):
     return word_word
 
 if __name__=="__main__":
+    print("Preparing data...")
     datafolder = "./data/"
     df = pd.read_csv(os.path.join(datafolder,"t_bbe.csv"))
     df.drop(["id", "v"], axis=1, inplace=True)
@@ -95,7 +97,7 @@ if __name__=="__main__":
     occurrences = OrderedDict((name, OrderedDict((name, 0) for name in names)) for name in names)
     # Find the co-occurrences:
     no_windows = 0; print("calculating co-occurences")
-    for l in df_data["c"]:
+    for l in tqdm(df_data["c"], total=len(df_data["c"])):
         for i in range(len(l)-window):
             no_windows += 1
             d = l[i:(i+window)]; dum = []
@@ -104,6 +106,7 @@ if __name__=="__main__":
                     if item not in dum:
                         occurrences[d[x]][item] += 1; dum.append(item)
             
+    print("Calculating PMI...")
     df_occurences = pd.DataFrame(occurrences, columns=occurrences.keys())
     df_occurences = (df_occurences + df_occurences.transpose())/2 ## symmetrize it as window size on both sides may not be same
     del occurrences
@@ -120,6 +123,7 @@ if __name__=="__main__":
         p_ij[col] = p_ij[col].apply(lambda x: math.log(x))
         
     ### Build graph
+    print("Building graph...")
     G = nx.Graph()
     G.add_nodes_from(df_tfidf.index) ## document nodes
     G.add_nodes_from(vocab) ## word nodes
