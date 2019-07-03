@@ -15,17 +15,27 @@ from generate_train_test_datasets import load_pickle
 from models import gcn
 from sklearn.metrics import confusion_matrix
 import pandas as pd
+from tqdm import tqdm
+import logging
+
+logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', \
+                    datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+logger = logging.getLogger(__file__)
         
 def misclassified(df_data, pred_labels_test_idx, labels_not_selected, test_idxs, book_dict):
-    for actual, pred, test_idx in zip([(e-1) for e in labels_not_selected], \
+    logger.info("Printing misclassified text and labels...")
+    for actual, pred, test_idx in tqdm(zip([(e-1) for e in labels_not_selected], \
                              list(pred_labels_test_idx.max(1)[1].numpy()),\
-                             test_idxs):
+                             test_idxs)):
         if actual != pred:
             print("Book: %s\nChapter: %s" % (book_dict[actual+1], df_data.loc[test_idx]["c"]))
             print("Predicted as %s" % book_dict[pred+1]); print("\n")
     
-if __name__=="__main__":
+def evaluate_model_results(args=None):
+    logger.info("Loading dataset and model for evaluation...")
     base_path = "./data/"
+    if args == None:
+        args = load_pickle("args.pkl")
     ### Loads bible data
     df = pd.read_csv(os.path.join(base_path,"t_bbe.csv"))
     df.drop(["id", "v"], axis=1, inplace=True)
@@ -56,6 +66,7 @@ if __name__=="__main__":
     f = X # (n X n) X (n X n) x (n X n) X (n X n) input of net
     f = torch.from_numpy(f).float()
     
+    logger.info("Loading labels...")
     ### Loads labels
     test_idxs = load_pickle("test_idxs.pkl")
     selected = load_pickle("selected.pkl")
@@ -64,7 +75,7 @@ if __name__=="__main__":
     
     ### Loads best model ###
     checkpoint = torch.load(os.path.join(base_path,"test_model_best_%d.pth.tar" % 0))
-    net = gcn(X.shape[1], A_hat)
+    net = gcn(X.shape[1], A_hat, args)
     net.load_state_dict(checkpoint['state_dict'])
     
     ### labels distribution
@@ -87,7 +98,8 @@ if __name__=="__main__":
     plt.savefig(os.path.join("./data/", "test_true_idxs_dist.png"))
     ### Inference
     net.eval()
-    pred_labels = net(f)
+    with torch.no_grad():
+        pred_labels = net(f)
     c_m = confusion_matrix([(e-1) for e in labels_not_selected], list(pred_labels[test_idxs].max(1)[1].numpy()))
     fig = plt.figure(figsize=(25,25))
     ax = fig.add_subplot(111)
@@ -98,3 +110,6 @@ if __name__=="__main__":
     plt.savefig(os.path.join("./data/", "confusion_matrix.png"))
     #### Prints misclassified labels
     misclassified(df_data, pred_labels[test_idxs], labels_not_selected, test_idxs, book_dict)
+
+if __name__=="__main__":
+    evaluate_model_results()

@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 from generate_train_test_datasets import load_pickle, save_as_pickle, generate_text_graph
 from models import gcn
+from evaluate_results import evaluate_model_results
 import matplotlib.pyplot as plt
 from argparse import ArgumentParser
 import logging
@@ -76,10 +77,12 @@ def load_datasets(args):
     f = torch.from_numpy(f).float()
     save_as_pickle("labels_selected.pkl", labels_selected)
     save_as_pickle("labels_not_selected.pkl", labels_not_selected)
+    logger.info("Split into %d train and %d test lebels." % (len(labels_selected), len(labels_not_selected)))
     return f, X, A_hat, selected, labels_selected, labels_not_selected, test_idxs
     
 def load_state(net, optimizer, scheduler, model_no=0, load_best=False):
     """ Loads saved model and optimizer states if exists """
+    logger.info("Initializing model and optimizer states...")
     base_path = "./data/"
     checkpoint_path = os.path.join(base_path,"test_checkpoint_%d.pth.tar" % model_no)
     best_path = os.path.join(base_path,"test_model_best_%d.pth.tar" % model_no)
@@ -121,10 +124,11 @@ if __name__ == "__main__":
     parser.add_argument("--hidden_size_2", type=int, default=130, help="Size of second GCN hidden weights")
     parser.add_argument("--num_classes", type=int, default=66, help="Number of prediction classes")
     parser.add_argument("--test_ratio", type=float, default=0.1, help="Ratio of test to training nodes")
-    parser.add_argument("--num_epochs", type=int, default=7000, help="No of epochs")
+    parser.add_argument("--num_epochs", type=int, default=5000, help="No of epochs")
     parser.add_argument("--lr", type=float, default=0.011, help="learning rate")
     parser.add_argument("--model_no", type=int, default=0, help="Model ID")
     args = parser.parse_args()
+    save_as_pickle("args.pkl", args)
     
     f, X, A_hat, selected, labels_selected, labels_not_selected, test_idxs = load_datasets(args)
     net = gcn(X.shape[1], A_hat, args)
@@ -154,7 +158,7 @@ if __name__ == "__main__":
             evaluation_trained.append((e, trained_accuracy)); evaluation_untrained.append((e, untrained_accuracy))
             print("[Epoch %d]: Evaluation accuracy of trained nodes: %.7f" % (e, trained_accuracy))
             print("[Epoch %d]: Evaluation accuracy of test nodes: %.7f" % (e, untrained_accuracy))
-            print("Labels of trained nodes: ", output[selected].max(1)[1])
+            print("Labels of trained nodes: \n", output[selected].max(1)[1])
             net.train()
             if trained_accuracy > best_pred:
                 best_pred = trained_accuracy
@@ -219,3 +223,6 @@ if __name__ == "__main__":
     ax.set_title("Accuracy vs Epoch", fontsize=20)
     ax.legend(fontsize=20)
     plt.savefig(os.path.join("./data/", "combined_plot_accuracy_vs_epoch.png"))
+    
+    logger.info("Evaluate results...")
+    evaluate_model_results(args=args)

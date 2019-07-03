@@ -12,6 +12,7 @@ import nltk
 import numpy as np
 import networkx as nx
 from collections import OrderedDict
+from itertools import combinations
 import math
 from tqdm import tqdm
 import logging
@@ -32,6 +33,10 @@ def save_as_pickle(filename, data):
                                 filename)
     with open(completeName, 'wb') as output:
         pickle.dump(data, output)
+        
+def nCr(n,r):
+    f = math.factorial
+    return int(f(n)/(f(r)*f(n-r)))
 
 ### remove stopwords and non-words from tokens list
 def filter_tokens(tokens, stopwords):
@@ -46,8 +51,11 @@ def dummy_fun(doc):
     return doc
 
 def word_word_edges(p_ij):
-    dum = []; word_word = []; counter = 0
+    word_word = []
     cols = list(p_ij.columns); cols = [str(w) for w in cols]
+    '''
+    # old, inefficient but maybe more instructive code
+    dum = []; counter = 0
     for w1 in tqdm(cols, total=len(cols)):
         for w2 in cols:
             #if (counter % 300000) == 0:
@@ -55,6 +63,10 @@ def word_word_edges(p_ij):
             if (w1 != w2) and ((w1,w2) not in dum) and (p_ij.loc[w1,w2] > 0):
                 word_word.append((w1,w2,{"weight":p_ij.loc[w1,w2]})); dum.append((w2,w1))
             counter += 1
+    '''
+    for w1, w2 in tqdm(combinations(cols, 2), total=nCr(len(cols), 2)):
+        if (p_ij.loc[w1,w2] > 0):
+            word_word.append((w1,w2,{"weight":p_ij.loc[w1,w2]}))
     return word_word
 
 def generate_text_graph(window=10):
@@ -94,7 +106,7 @@ def generate_text_graph(window=10):
     names = vocab
     occurrences = OrderedDict((name, OrderedDict((name, 0) for name in names)) for name in names)
     # Find the co-occurrences:
-    no_windows = 0; logger.info("calculating co-occurences...")
+    no_windows = 0; logger.info("Calculating co-occurences...")
     for l in tqdm(df_data["c"], total=len(df_data["c"])):
         for i in range(len(l)-window):
             no_windows += 1

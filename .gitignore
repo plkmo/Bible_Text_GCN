@@ -8,4 +8,6 @@
 /src/datasets/*
 /data/*.pkl
 /data/*.tar
+/data/*.png
+/data/backup/*
 /__pycache__/*
