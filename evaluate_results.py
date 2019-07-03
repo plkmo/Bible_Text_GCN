@@ -10,29 +10,12 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 import seaborn as sb
-import pickle
 import os
-from text_GCN import gcn
+from generate_train_test_datasets import load_pickle
+from models import gcn
 from sklearn.metrics import confusion_matrix
 import pandas as pd
-
-def load_pickle(filename):
-    completeName = os.path.join("./data/",\
-                                filename)
-    with open(completeName, 'rb') as pkl_file:
-        data = pickle.load(pkl_file)
-    return data
-
-def save_as_pickle(filename, data):
-    completeName = os.path.join("./data/",\
-                                filename)
-    with open(completeName, 'wb') as output:
-        pickle.dump(data, output)
         
-def evaluate(output, labels_e):
-    _, labels = output.max(1); labels = labels.numpy()
-    return sum([(e-1) for e in labels_e] == labels)/len(labels)
-
 def misclassified(df_data, pred_labels_test_idx, labels_not_selected, test_idxs, book_dict):
     for actual, pred, test_idx in zip([(e-1) for e in labels_not_selected], \
                              list(pred_labels_test_idx.max(1)[1].numpy()),\
@@ -80,7 +63,7 @@ if __name__=="__main__":
     labels_not_selected = load_pickle("labels_not_selected.pkl")
     
     ### Loads best model ###
-    checkpoint = torch.load(os.path.join(base_path,"model_best.pth.tar"))
+    checkpoint = torch.load(os.path.join(base_path,"test_model_best_%d.pth.tar" % 0))
     net = gcn(X.shape[1], A_hat)
     net.load_state_dict(checkpoint['state_dict'])
     

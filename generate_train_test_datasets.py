@@ -14,6 +14,11 @@ import networkx as nx
 from collections import OrderedDict
 import math
 from tqdm import tqdm
+import logging
+
+logging.basicConfig(format='%(asctime)s [%(levelname)s]: %(message)s', \
+                    datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
+logger = logging.getLogger(__file__)
 
 def load_pickle(filename):
     completeName = os.path.join("./data/",\
@@ -52,15 +57,9 @@ def word_word_edges(p_ij):
             counter += 1
     return word_word
 
-def pool_word_word_edges(w1):
-    dum = []; word_word = {}
-    for w2 in p_ij.index:
-        if (w1 != w2) and ((w1,w2) not in dum) and (p_ij.loc[w1,w2] > 0):
-            word_word = [(w1,w2,{"weight":p_ij.loc[w1,w2]})]; dum.append((w2,w1))
-    return word_word
-
-if __name__=="__main__":
-    print("Preparing data...")
+def generate_text_graph(window=10):
+    """ generates graph based on text corpus; window = sliding window size to calculate point-wise mutual information between words """
+    logger.info("Preparing data...")
     datafolder = "./data/"
     df = pd.read_csv(os.path.join(datafolder,"t_bbe.csv"))
     df.drop(["id", "v"], axis=1, inplace=True)
@@ -92,11 +91,10 @@ if __name__=="__main__":
     df_tfidf = pd.DataFrame(df_tfidf,columns=vocab)
     
     ### PMI between words
-    window = 10 # sliding window size to calculate point-wise mutual information between words
     names = vocab
     occurrences = OrderedDict((name, OrderedDict((name, 0) for name in names)) for name in names)
     # Find the co-occurrences:
-    no_windows = 0; print("calculating co-occurences")
+    no_windows = 0; logger.info("calculating co-occurences...")
     for l in tqdm(df_data["c"], total=len(df_data["c"])):
         for i in range(len(l)-window):
             no_windows += 1
@@ -106,7 +104,7 @@ if __name__=="__main__":
                     if item not in dum:
                         occurrences[d[x]][item] += 1; dum.append(item)
             
-    print("Calculating PMI...")
+    logger.info("Calculating PMI...")
     df_occurences = pd.DataFrame(occurrences, columns=occurrences.keys())
     df_occurences = (df_occurences + df_occurences.transpose())/2 ## symmetrize it as window size on both sides may not be same
     del occurrences
@@ -123,17 +121,20 @@ if __name__=="__main__":
         p_ij[col] = p_ij[col].apply(lambda x: math.log(x))
         
     ### Build graph
-    print("Building graph...")
+    logger.info("Building graph...")
     G = nx.Graph()
     G.add_nodes_from(df_tfidf.index) ## document nodes
     G.add_nodes_from(vocab) ## word nodes
     ### build edges between document-word pairs
     document_word = [(doc,w,{"weight":df_tfidf.loc[doc,w]}) for doc in df_tfidf.index for w in df_tfidf.columns]
     
-    print("Building word-word edges")
+    logger.info("Building word-word edges...")
     word_word = word_word_edges(p_ij)
     save_as_pickle("word_word_edges.pkl", word_word)
     G.add_edges_from(document_word)
     G.add_edges_from(word_word)
     save_as_pickle("text_graph.pkl", G)
+    logger.info("Done and saved!")
     
+if __name__=="__main__":
+    generate_text_graph()    
