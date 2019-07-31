@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser.add_argument("--hidden_size_2", type=int, default=130, help="Size of second GCN hidden weights")
     parser.add_argument("--num_classes", type=int, default=66, help="Number of prediction classes")
     parser.add_argument("--test_ratio", type=float, default=0.1, help="Ratio of test to training nodes")
-    parser.add_argument("--num_epochs", type=int, default=5000, help="No of epochs")
+    parser.add_argument("--num_epochs", type=int, default=3300, help="No of epochs")
     parser.add_argument("--lr", type=float, default=0.011, help="learning rate")
     parser.add_argument("--model_no", type=int, default=0, help="Model ID")
     args = parser.parse_args()

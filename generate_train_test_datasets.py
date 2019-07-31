@@ -94,6 +94,7 @@ def generate_text_graph(window=10):
     save_as_pickle("df_data.pkl", df_data)
     
     ### Tfidf
+    logger.info("Calculating Tf-idf...")
     vectorizer = TfidfVectorizer(input="content", max_features=None, tokenizer=dummy_fun, preprocessor=dummy_fun)
     vectorizer.fit(df_data["c"])
     df_tfidf = vectorizer.transform(df_data["c"])
@@ -133,16 +134,21 @@ def generate_text_graph(window=10):
         p_ij[col] = p_ij[col].apply(lambda x: math.log(x))
         
     ### Build graph
-    logger.info("Building graph...")
+    logger.info("Building graph (No. of document, word nodes: %d, %d)..." %(len(df_tfidf.index), len(vocab)))
     G = nx.Graph()
+    logger.info("Adding document nodes to graph...")
     G.add_nodes_from(df_tfidf.index) ## document nodes
+    logger.info("Adding word nodes to graph...")
     G.add_nodes_from(vocab) ## word nodes
     ### build edges between document-word pairs
-    document_word = [(doc,w,{"weight":df_tfidf.loc[doc,w]}) for doc in df_tfidf.index for w in df_tfidf.columns]
+    logger.info("Building document-word edges...")
+    document_word = [(doc,w,{"weight":df_tfidf.loc[doc,w]}) for doc in tqdm(df_tfidf.index, total=len(df_tfidf.index))\
+                     for w in df_tfidf.columns]
     
     logger.info("Building word-word edges...")
     word_word = word_word_edges(p_ij)
     save_as_pickle("word_word_edges.pkl", word_word)
+    logger.info("Adding document-word and word-word edges...")
     G.add_edges_from(document_word)
     G.add_edges_from(word_word)
     save_as_pickle("text_graph.pkl", G)
