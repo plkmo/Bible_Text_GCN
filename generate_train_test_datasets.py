@@ -105,26 +105,33 @@ def generate_text_graph(window=10):
     
     ### PMI between words
     names = vocab
-    occurrences = OrderedDict((name, OrderedDict((name, 0) for name in names)) for name in names)
+    n_i  = OrderedDict((name, 0) for name in names)
+    word2index = OrderedDict( (name,index) for index,name in enumerate(names) )
+
+    occurrences = np.zeros( (len(names),len(names)) ,dtype=np.int32)
     # Find the co-occurrences:
     no_windows = 0; logger.info("Calculating co-occurences...")
     for l in tqdm(df_data["c"], total=len(df_data["c"])):
         for i in range(len(l)-window):
             no_windows += 1
-            d = l[i:(i+window)]; dum = []
-            for x in range(len(d)):
-                for item in d[:x] + d[(x+1):]:
-                    if item not in dum:
-                        occurrences[d[x]][item] += 1; dum.append(item)
-            
-    logger.info("Calculating PMI...")
-    df_occurences = pd.DataFrame(occurrences, columns=occurrences.keys())
-    df_occurences = (df_occurences + df_occurences.transpose())/2 ## symmetrize it as window size on both sides may not be same
-    del occurrences
+            d = set(l[i:(i+window)])
+
+            for w in d:
+                n_i[w] += 1
+            for w1,w2 in combinations(d,2):
+                i1 = word2index[w1]
+                i2 = word2index[w2]
+
+                occurrences[i1][i2] += 1
+                occurrences[i2][i1] += 1
+
+    logger.info("Calculating PMI*...")
     ### convert to PMI
-    p_i = df_occurences.sum(axis=0)/no_windows
-    p_ij = df_occurences/no_windows
-    del df_occurences
+    p_ij = pd.DataFrame(occurrences, index = names,columns=names)/no_windows
+    p_i = pd.Series(n_i, index=n_i.keys())/no_windows
+
+    del occurrences
+    del n_i
     for col in p_ij.columns:
         p_ij[col] = p_ij[col]/p_i[col]
     for row in p_ij.index:
