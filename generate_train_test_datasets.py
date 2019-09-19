@@ -105,11 +105,10 @@ def generate_text_graph(window=10):
     
     ### PMI between words
     names = vocab
-    n_i  = OrderedDict((name, 0) for name in names)   #记录出现i 的 窗口的个数
+    n_i  = OrderedDict((name, 0) for name in names)
     word2index = OrderedDict( (name,index) for index,name in enumerate(names) )
 
     occurrences = np.zeros( (len(names),len(names)) ,dtype=np.int32)
-    #OrderedDict((name, OrderedDict((name, 0) for name in names)) for name in names) #记录出现(i,j) 的 窗口的个数
     # Find the co-occurrences:
     no_windows = 0; logger.info("Calculating co-occurences...")
     for l in tqdm(df_data["c"], total=len(df_data["c"])):
