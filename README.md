@@ -28,3 +28,6 @@ You will find the following:
 
 ## How to use
 To start, clone the repo, then run text_GCN.py (-h for additional arguments)
+
+## Additional resources
+- Implement GCN (and more) on your own dataset (https://github.com/plkmo/NLP_Toolkit)
