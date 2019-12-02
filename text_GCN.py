@@ -181,7 +181,8 @@ if __name__ == "__main__":
                     'scheduler' : scheduler.state_dict(),\
                 }, os.path.join("./data/",\
                     "test_checkpoint_%d.pth.tar" % args.model_no))
-    
+        scheduler.step()
+        
     logger.info("Finished training!")
     evaluation_trained = np.array(evaluation_trained); evaluation_untrained = np.array(evaluation_untrained)
     save_as_pickle("test_losses_per_epoch_%d_final.pkl" % args.model_no, losses_per_epoch)
